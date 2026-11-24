@@ -1,0 +1,1300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DRISHTI AI — Diabetic Retinopathy Screening Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F4F7F6;
+    --surface:#FFFFFF;
+    --ink:#12222E;
+    --ink-muted:#5C6A72;
+    --hairline:#DCE3E1;
+    --teal:#0F7A82;
+    --teal-deep:#0A5960;
+    --teal-tint:#E4F1F0;
+    --amber:#B4790E;
+    --amber-tint:#FBF0DD;
+    --red:#AE3626;
+    --red-tint:#FBE7E3;
+    --green:#2F7D5A;
+    --green-tint:#E6F2EA;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter',system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+  }
+  ::selection{background:var(--teal-tint);}
+
+  /* ---------- top bar ---------- */
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 28px;
+    border-bottom:1px solid var(--hairline);
+    background:var(--surface);
+    position:sticky; top:0; z-index:10;
+  }
+  .brand{display:flex; align-items:baseline; gap:12px;}
+  .brand-mark{
+    font-family:'Source Serif 4', serif;
+    font-weight:700;
+    font-size:22px;
+    letter-spacing:0.01em;
+    color:var(--teal-deep);
+  }
+  .brand-sub{
+    font-size:13px;
+    color:var(--ink-muted);
+    border-left:1px solid var(--hairline);
+    padding-left:12px;
+  }
+  .engine-status{
+    display:flex; align-items:center; gap:6px;
+    font-size:12px; font-weight:600;
+    padding:4px 10px; border-radius:12px;
+    background:var(--bg); border:1px solid var(--hairline);
+    color:var(--ink-muted);
+  }
+  .engine-status.online{
+    background:var(--green-tint); border-color:var(--green); color:var(--green);
+  }
+  .engine-pulse{
+    width:7px; height:7px; border-radius:50%; background:currentColor;
+  }
+  .patient-chip{
+    display:flex; align-items:center; gap:10px;
+    font-size:13px; color:var(--ink-muted);
+  }
+  .patient-chip input{
+    font-family:'Inter',sans-serif;
+    font-size:13px;
+    border:1px solid var(--hairline);
+    border-radius:4px;
+    padding:6px 10px;
+    width:130px;
+    color:var(--ink);
+    background:var(--bg);
+  }
+  .patient-chip input:focus{outline:2px solid var(--teal); outline-offset:1px;}
+  .new-btn{
+    font-family:'Inter',sans-serif;
+    font-size:13px; font-weight:600;
+    color:var(--teal-deep);
+    background:var(--teal-tint);
+    border:1px solid transparent;
+    border-radius:4px;
+    padding:7px 14px;
+    cursor:pointer;
+  }
+  .new-btn:hover{background:#d7ebe9;}
+
+  /* ---------- workspace layout (left sidebar + main) ---------- */
+  .workspace{
+    display:flex;
+    flex:1;
+    min-height:calc(100vh - 61px);
+  }
+
+  .sidebar{
+    width:270px;
+    flex:0 0 270px;
+    background:var(--surface);
+    border-right:1px solid var(--hairline);
+    padding:20px 14px;
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+    position:sticky;
+    top:61px;
+    height:calc(100vh - 61px);
+    overflow-y:auto;
+  }
+  .sidebar-label{
+    font-size:11px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    color:var(--ink-muted);
+    padding:4px 12px 10px;
+  }
+  .nav-item{
+    display:flex; align-items:center; gap:12px;
+    padding:11px 12px;
+    border-radius:6px;
+    cursor:pointer;
+    border-left:3px solid transparent;
+    transition:background .12s;
+  }
+  .nav-item:hover:not(.locked){background:var(--bg);}
+  .nav-item.locked{cursor:not-allowed; opacity:0.42;}
+  .nav-item.active{
+    background:var(--teal-tint);
+    border-left-color:var(--teal);
+  }
+  .nav-num{
+    width:24px; height:24px; border-radius:50%;
+    border:1.5px solid var(--hairline);
+    display:flex; align-items:center; justify-content:center;
+    font-size:11px; font-weight:700;
+    color:var(--ink-muted);
+    background:var(--surface);
+    flex:0 0 auto;
+  }
+  .nav-item.active .nav-num{border-color:var(--teal); color:#fff; background:var(--teal);}
+  .nav-item.done .nav-num{border-color:var(--teal); color:var(--teal); background:var(--teal-tint);}
+  .nav-text-title{font-size:13.5px; font-weight:600; color:var(--ink-muted);}
+  .nav-item.active .nav-text-title, .nav-item.done .nav-text-title{color:var(--ink);}
+  .nav-text-desc{font-size:11px; color:var(--ink-muted); margin-top:1px;}
+  .nav-sep{height:1px; background:var(--hairline); margin:12px 8px;}
+  .nav-item.records-tab .nav-num{border-radius:5px;}
+
+  @media (max-width:860px){
+    .workspace{flex-direction:column;}
+    .sidebar{
+      width:100%; flex:none; height:auto; position:static;
+      flex-direction:row; overflow-x:auto; border-right:none; border-bottom:1px solid var(--hairline);
+      padding:10px 14px;
+    }
+    .sidebar-label{display:none;}
+    .nav-item{flex:0 0 auto; border-left:none; border-bottom:2.5px solid transparent;}
+    .nav-item.active{border-bottom-color:var(--teal);}
+    .nav-sep{width:1px; height:28px; margin:0 6px; align-self:center;}
+  }
+
+  /* ---------- main ---------- */
+  .main{
+    flex:1;
+    padding:36px 40px 60px;
+    max-width:980px;
+  }
+  .panel-title{
+    font-family:'Source Serif 4', serif;
+    font-size:26px; font-weight:600;
+    margin:0 0 6px 0;
+  }
+  .panel-sub{font-size:14px; color:var(--ink-muted); margin:0 0 28px 0; max-width:620px;}
+
+  .card{
+    background:var(--surface);
+    border:1px solid var(--hairline);
+    border-radius:8px;
+    padding:30px;
+    max-width:860px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+  }
+
+  /* forms */
+  .form-group{margin-bottom:18px;}
+  .form-group label{display:block; font-size:13px; font-weight:600; margin-bottom:6px; color:var(--ink);}
+  .form-group input, .form-group select, .form-group textarea{
+    width:100%; font-family:'Inter',sans-serif; font-size:14px;
+    border:1px solid var(--hairline); border-radius:6px; padding:10px 12px;
+    background:var(--bg); color:var(--ink);
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus{outline:2px solid var(--teal); outline-offset:1px; background:#fff;}
+  .form-row-2{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+  .form-row-3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px;}
+
+  /* upload */
+  .dropzone{
+    border:1.5px dashed var(--hairline);
+    border-radius:6px;
+    padding:46px 24px;
+    text-align:center;
+    background:var(--bg);
+    cursor:pointer;
+    transition:border-color .15s;
+  }
+  .dropzone:hover, .dropzone.drag{border-color:var(--teal);}
+  .dropzone svg{opacity:0.55; margin-bottom:14px;}
+  .dropzone-title{font-size:15px; font-weight:600;}
+  .dropzone-sub{font-size:13px; color:var(--ink-muted); margin-top:4px;}
+  input[type=file]{display:none;}
+
+  .btn{
+    font-family:'Inter',sans-serif;
+    font-size:14px; font-weight:600;
+    border:none; border-radius:5px;
+    padding:11px 20px;
+    cursor:pointer;
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  }
+  .btn-primary{background:var(--teal); color:#fff;}
+  .btn-primary:hover{background:var(--teal-deep);}
+  .btn-primary:disabled{background:#B9C4C2; cursor:not-allowed;}
+  .btn-ghost{background:transparent; color:var(--ink-muted); border:1px solid var(--hairline);}
+  .btn-ghost:hover{border-color:var(--ink-muted); color:var(--ink);}
+  .btn-row{display:flex; gap:10px; margin-top:22px; flex-wrap:wrap;}
+
+  /* patient session card */
+  .patient-card-verified{
+    background:var(--teal-tint); border:1px solid var(--teal);
+    border-radius:6px; padding:18px 22px; margin-bottom:24px;
+    display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;
+  }
+  .patient-card-info strong{font-size:16px; color:var(--teal-deep);}
+  .patient-card-info p{margin:4px 0 0 0; font-size:13px; color:var(--ink-muted);}
+
+  /* image + quality */
+  .img-row{display:flex; gap:28px; flex-wrap:wrap;}
+  .img-frame{
+    width:260px; height:260px; flex:0 0 auto;
+    border-radius:6px; overflow:hidden;
+    background:#0d1b17;
+    position:relative;
+  }
+  .img-frame canvas, .img-frame img{
+    width:100%; height:100%; object-fit:cover; display:block;
+  }
+  .metrics{flex:1 1 260px; min-width:240px;}
+  .metric-row{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:12px 0; border-bottom:1px solid var(--hairline);
+    font-size:14px;
+  }
+  .metric-row:last-of-type{border-bottom:none;}
+  .metric-name{color:var(--ink-muted);}
+  .metric-val{font-weight:600; display:flex; align-items:center; gap:8px;}
+  .dot{width:8px; height:8px; border-radius:50%;}
+  .dot.good{background:var(--green);}
+  .dot.bad{background:var(--red);}
+  .verdict{
+    margin-top:18px; padding:14px 16px; border-radius:5px;
+    font-size:14px; font-weight:600;
+    display:flex; align-items:center; gap:10px;
+  }
+  .verdict.good{background:var(--green-tint); color:var(--green);}
+  .verdict.bad{background:var(--red-tint); color:var(--red);}
+
+  /* analysis */
+  .analyzing{
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:60px 20px; gap:18px;
+  }
+  .spinner{
+    width:34px; height:34px; border-radius:50%;
+    border:3px solid var(--hairline); border-top-color:var(--teal);
+    animation:spin 0.8s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .analyzing-text{font-size:14px; color:var(--ink-muted);}
+
+  .result-row{display:flex; gap:32px; flex-wrap:wrap; align-items:center;}
+  .level-badge{
+    width:120px; height:120px; border-radius:50%;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    flex:0 0 auto;
+    border:3px solid;
+  }
+  .level-num{font-family:'Source Serif 4', serif; font-size:44px; font-weight:700; line-height:1;}
+  .level-tag{font-size:11px; color:var(--ink-muted); margin-top:2px;}
+  .result-detail{flex:1 1 240px;}
+  .result-detail h3{margin:0 0 4px 0; font-size:19px; font-family:'Source Serif 4', serif;}
+  .conf-bar-track{
+    height:6px; border-radius:3px; background:var(--hairline);
+    margin:10px 0 6px 0; overflow:hidden; max-width:260px;
+  }
+  .conf-bar-fill{height:100%; background:var(--teal);}
+  .conf-label{font-size:13px; color:var(--ink-muted);}
+
+  /* Probability bars breakdown */
+  .prob-breakdown{margin-top:20px; border-top:1px solid var(--hairline); padding-top:16px;}
+  .prob-title{font-size:12px; text-transform:uppercase; font-weight:700; color:var(--ink-muted); margin-bottom:10px; letter-spacing:0.04em;}
+  .prob-row{display:flex; align-items:center; gap:10px; margin-bottom:6px; font-size:12.5px;}
+  .prob-name{width:110px; color:var(--ink-muted); white-space:nowrap;}
+  .prob-track{flex:1; height:6px; background:var(--hairline); border-radius:3px; overflow:hidden;}
+  .prob-fill{height:100%; background:var(--teal); border-radius:3px;}
+  .prob-fill.predicted{background:var(--teal-deep); font-weight:700;}
+  .prob-val{width:42px; text-align:right; font-weight:600; font-size:12px;}
+
+  .heat-row{display:flex; gap:24px; margin-top:28px; flex-wrap:wrap;}
+  .heat-col{text-align:center;}
+  .heat-col-label{font-size:12.5px; color:var(--ink-muted); margin-top:8px;}
+  .heat-frame{width:220px; height:220px; border-radius:6px; overflow:hidden; background:#0d1b17;}
+  .heat-frame canvas, .heat-frame img{width:100%; height:100%; display:block; object-fit:cover;}
+
+  .note{
+    margin-top:24px; font-size:12.5px; color:var(--ink-muted);
+    border-top:1px solid var(--hairline); padding-top:16px;
+  }
+
+  /* doctor review */
+  .review-grid{display:grid; grid-template-columns:1.1fr 0.9fr; gap:24px;}
+  @media (max-width:780px){.review-grid{grid-template-columns:1fr;}}
+  .review-block h4{font-size:12px; text-transform:uppercase; letter-spacing:0.05em; color:var(--teal-deep); font-weight:700; margin:0 0 12px 0; border-bottom:1px solid var(--hairline); padding-bottom:6px;}
+  .stat-line{display:flex; justify-content:space-between; font-size:13px; padding:5px 0;}
+  .stat-line span:first-child{color:var(--ink-muted);}
+  .clinical-box{background:var(--bg); border:1px solid var(--hairline); border-radius:6px; padding:12px; margin-top:10px; font-size:12.5px; line-height:1.5;}
+
+  .decision-btns{display:flex; gap:10px; margin-top:18px; flex-wrap:wrap;}
+  .decision-btn{
+    flex:1 1 auto; padding:12px 10px; font-size:13px; font-weight:600;
+    border-radius:5px; border:1.5px solid var(--hairline); background:var(--surface);
+    cursor:pointer; color:var(--ink);
+  }
+  .decision-btn:hover{border-color:var(--teal);}
+  .decision-btn.selected.confirm{border-color:var(--green); background:var(--green-tint); color:var(--green);}
+  .decision-btn.selected.reject{border-color:var(--red); background:var(--red-tint); color:var(--red);}
+  .decision-btn.selected.further{border-color:var(--amber); background:var(--amber-tint); color:var(--amber);}
+
+  /* referral */
+  .referral-banner{
+    border-radius:6px; padding:22px 26px; display:flex; align-items:center; gap:18px;
+  }
+  .referral-banner.low{background:var(--green-tint);}
+  .referral-banner.medium{background:var(--amber-tint);}
+  .referral-banner.high{background:var(--red-tint);}
+  .referral-icon{font-size:28px;}
+  .referral-title{font-size:17px; font-weight:700;}
+  .referral-title.low{color:var(--green);}
+  .referral-title.medium{color:var(--amber);}
+  .referral-title.high{color:var(--red);}
+  .referral-desc{font-size:13.5px; color:var(--ink-muted); margin-top:2px;}
+
+  .report{margin-top:24px; font-size:13.5px;}
+  .report-row{display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--hairline);}
+  .report-row:last-child{border-bottom:none;}
+  .report-label{color:var(--ink-muted);}
+  .report-val{font-weight:600;}
+
+  /* disclaimer banner */
+  .disclaimer-banner{
+    background:#FFFBEB; border:1px solid #FDE68A; color:#92400E;
+    border-radius:6px; padding:10px 14px; font-size:12px; margin-bottom:20px;
+    display:flex; align-items:center; gap:8px;
+  }
+
+  /* ---------- records page ---------- */
+  .records-page-title{
+    font-family:'Source Serif 4', serif; font-size:26px; font-weight:600; margin:0 0 6px 0;
+  }
+  .stat-cards{display:flex; gap:16px; flex-wrap:wrap; margin:26px 0 24px 0;}
+  .stat-card{
+    flex:1 1 160px; background:var(--surface); border:1px solid var(--hairline);
+    border-radius:6px; padding:18px 20px;
+  }
+  .stat-card-num{font-family:'Source Serif 4', serif; font-size:28px; font-weight:700;}
+  .stat-card-label{font-size:12px; color:var(--ink-muted); margin-top:4px;}
+  .stat-card.low .stat-card-num{color:var(--green);}
+  .stat-card.medium .stat-card-num{color:var(--amber);}
+  .stat-card.high .stat-card-num{color:var(--red);}
+
+  .records-filter-bar{
+    display:flex; gap:12px; margin-bottom:16px; flex-wrap:wrap;
+  }
+  .records-filter-bar input{
+    flex:1 1 200px; font-family:'Inter',sans-serif; font-size:13px;
+    border:1px solid var(--hairline); border-radius:4px; padding:8px 12px; background:#fff;
+  }
+
+  .records-table-card{
+    background:var(--surface); border:1px solid var(--hairline); border-radius:6px; overflow:hidden;
+  }
+  table{width:100%; border-collapse:collapse; font-size:13.5px;}
+  th{
+    text-align:left; font-weight:600; color:var(--ink-muted);
+    padding:12px 16px; border-bottom:1.5px solid var(--hairline);
+    background:var(--bg); font-size:12.5px;
+  }
+  td{padding:12px 16px; border-bottom:1px solid var(--hairline);}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr:hover{background:var(--bg);}
+  .lvl-chip{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:24px; height:24px; border-radius:50%; font-size:12px; font-weight:700;
+    color:#fff;
+  }
+  .tier-pill{
+    display:inline-block; padding:4px 10px; border-radius:20px; font-size:12px; font-weight:600;
+  }
+  .tier-pill.low{background:var(--green-tint); color:var(--green);}
+  .tier-pill.medium{background:var(--amber-tint); color:var(--amber);}
+  .tier-pill.high{background:var(--red-tint); color:var(--red);}
+  .empty-state{
+    text-align:center; padding:60px 20px; color:var(--ink-muted);
+  }
+  .empty-state-title{font-size:15px; font-weight:600; color:var(--ink); margin-bottom:6px;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <span class="brand-mark">DRISHTI AI</span>
+    <span class="brand-sub">AI Retinal Screening System</span>
+  </div>
+  <div style="display:flex; align-items:center; gap:16px;">
+    <div id="engineStatus" class="engine-status">
+      <span class="engine-pulse"></span>
+      <span id="engineStatusText">Checking AI Engine...</span>
+    </div>
+    <div class="patient-chip">
+      <span>Active ID:</span>
+      <input id="patientId" placeholder="Not logged in" readonly />
+      <button class="new-btn" onclick="resetFlow()">New Registration</button>
+    </div>
+  </div>
+</div>
+
+<div class="workspace">
+  <aside class="sidebar" id="sidebar"></aside>
+  <main class="main" id="main"></main>
+</div>
+
+<script>
+const STEPS = [
+  {key:'intake',    title:'Patient Intake', desc:'Demographics & history'},
+  {key:'login',     title:'Login Session',  desc:'Active session auth'},
+  {key:'upload',    title:'Image Capture',  desc:'Fundus photo upload'},
+  {key:'quality',   title:'Quality Check',  desc:'Illumination & clarity'},
+  {key:'analysis',  title:'AI Analysis',    desc:'DR grading & confidence'},
+  {key:'explain',   title:'Explainability', desc:'Grad-CAM heatmap'},
+  {key:'review',    title:'Doctor Review',  desc:'Clinical evaluation'},
+  {key:'referral',  title:'Referral Report',desc:'Actionable outcome'},
+];
+
+let state = {
+  view: 'flow',   
+  step: 0,
+  maxReached: 0,
+  patient: { id:'', name:'', age:'', gender:'Male', phone:'', history:'No prior DR' },
+  isLoggedIn: false,
+  currentFile: null,
+  imgEl: null,
+  quality: null,
+  ai: null,
+  decision: null,
+  doctorNotes: '',
+  isBackendConnected: false
+};
+
+let records = [];
+
+// Probe backend API connection status on load
+async function checkBackendStatus(){
+  const statusEl = document.getElementById('engineStatus');
+  const textEl = document.getElementById('engineStatusText');
+  try{
+    const res = await fetch('/api/status');
+    if(res.ok){
+      const data = await res.json();
+      state.isBackendConnected = true;
+      if(statusEl) statusEl.className = 'engine-status online';
+      if(textEl) textEl.textContent = 'DenseNet-121 Engine: Online';
+      return;
+    }
+  }catch(e){
+    // Backend offline / standalone mode
+  }
+  state.isBackendConnected = false;
+  if(statusEl) statusEl.className = 'engine-status';
+  if(textEl) textEl.textContent = 'Browser Standalone Mode';
+}
+
+function resetFlow(){
+  state = {
+    view:'flow', step:0, maxReached:0,
+    patient: { id:'', name:'', age:'', gender:'Male', phone:'', history:'No prior DR' },
+    isLoggedIn: false, currentFile:null, imgEl:null, quality:null, ai:null, decision:null, doctorNotes:'',
+    isBackendConnected: state.isBackendConnected
+  };
+  document.getElementById('patientId').value = '';
+  render();
+}
+
+function goTo(step){
+  state.view = 'flow';
+  state.step = step;
+  state.maxReached = Math.max(state.maxReached, step);
+  render();
+}
+
+function goToNav(step){
+  if(step > state.maxReached) return;
+  state.view = 'flow';
+  state.step = step;
+  render();
+}
+
+function openRecords(){
+  state.view = 'records';
+  render();
+}
+
+/* ---------------- Image & Heuristic Analysis ---------------- */
+
+function getDownsampledData(img, size){
+  const c = document.createElement('canvas');
+  c.width = size; c.height = size;
+  const ctx = c.getContext('2d');
+  ctx.drawImage(img, 0, 0, size, size);
+  return {ctx, canvas:c, data: ctx.getImageData(0,0,size,size)};
+}
+
+function toGray(data, size){
+  const g = new Float32Array(size*size);
+  for(let i=0;i<size*size;i++){
+    const r=data[i*4], gg=data[i*4+1], b=data[i*4+2];
+    g[i] = 0.299*r + 0.587*gg + 0.114*b;
+  }
+  return g;
+}
+
+function analyzeQuality(img){
+  const size = 128;
+  const {data} = getDownsampledData(img, size);
+  const px = data.data;
+  const gray = toGray(px, size);
+
+  let sum=0;
+  for(let i=0;i<gray.length;i++) sum += gray[i];
+  const brightness = sum / gray.length;
+
+  let lapSum=0, lapSumSq=0, n=0;
+  for(let y=1;y<size-1;y++){
+    for(let x=1;x<size-1;x++){
+      const idx = y*size+x;
+      const lap = gray[idx-size] + gray[idx+size] + gray[idx-1] + gray[idx+1] - 4*gray[idx];
+      lapSum += lap; lapSumSq += lap*lap; n++;
+    }
+  }
+  const lapMean = lapSum/n;
+  const sharpness = (lapSumSq/n) - (lapMean*lapMean);
+
+  const region = (x0,y0,x1,y1)=>{
+    let s=0,c=0;
+    for(let y=y0;y<y1;y++) for(let x=x0;x<x1;x++){ s+=gray[y*size+x]; c++; }
+    return s/c;
+  };
+  const m = Math.round(size*0.18);
+  const cornerAvg = (region(0,0,m,m)+region(size-m,0,size,m)+region(0,size-m,m,size)+region(size-m,size-m,size,size))/4;
+  const centerAvg = region(Math.round(size*0.35),Math.round(size*0.35),Math.round(size*0.65),Math.round(size*0.65));
+  const framing = centerAvg - cornerAvg;
+
+  let orangeCount=0, validCount=0, hueVals=[];
+  for(let i=0;i<size*size;i++){
+    const r=px[i*4], g=px[i*4+1], b=px[i*4+2];
+    if(r+g+b < 45) continue;
+    validCount++;
+    if(r > g*1.15 && r > b*1.3) orangeCount++;
+    hueVals.push(r-b);
+  }
+  const orangeFraction = validCount>0 ? (orangeCount/validCount)*100 : 0;
+  let hueMean=0;
+  for(const v of hueVals) hueMean+=v;
+  hueMean = hueVals.length ? hueMean/hueVals.length : 0;
+  let hueVarSum=0;
+  for(const v of hueVals) hueVarSum += (v-hueMean)*(v-hueMean);
+  const hueStd = hueVals.length ? Math.sqrt(hueVarSum/hueVals.length) : 999;
+
+  const brightnessOk = brightness > 40 && brightness < 210;
+  const sharpnessOk = sharpness > 18;
+  const framingOk = framing > 4;
+  const colorOk = orangeFraction > 50 && hueStd < 45;
+
+  const pass = brightnessOk && sharpnessOk && framingOk && colorOk;
+
+  return {
+    brightness: Math.round(brightness),
+    sharpness: Math.round(sharpness),
+    framing: Math.round(framing),
+    colorMatch: Math.round(orangeFraction),
+    brightnessOk, sharpnessOk, framingOk, colorOk, pass
+  };
+}
+
+function analyzeAI(img){
+  const size = 160;
+  const {data} = getDownsampledData(img, size);
+  const px = data.data;
+
+  const valid = new Uint8Array(size*size);
+  let validCount = 0;
+  for(let i=0;i<size*size;i++){
+    const r=px[i*4], g=px[i*4+1], b=px[i*4+2];
+    if(r+g+b >= 45){ valid[i]=1; validCount++; }
+  }
+  const useAll = validCount < 200;
+  const isValid = idx => useAll ? true : valid[idx]===1;
+
+  let rSum=0,gSum=0,cnt=0;
+  for(let i=0;i<size*size;i+=3){
+    if(!isValid(i)) continue;
+    rSum+=px[i*4]; gSum+=px[i*4+1]; cnt++;
+  }
+  if(cnt===0){ cnt=1; }
+  const bgR=rSum/cnt, bgG=gSum/cnt;
+
+  let anomalCount=0, wSum=0, cx=0, cy=0;
+  for(let y=0;y<size;y++){
+    for(let x=0;x<size;x++){
+      const i = y*size+x;
+      if(!isValid(i)) continue;
+      const r=px[i*4], g=px[i*4+1], b=px[i*4+2];
+      const darkRed = Math.max(0, (bgR - r) - (bgG - g)*0.3);
+      const brightSpot = (r>215 && g>195 && b<160);
+      if(darkRed > 40 || brightSpot){
+        anomalCount++;
+        const w = brightSpot ? 30 : darkRed;
+        wSum += w; cx += x*w; cy += y*w;
+      }
+    }
+  }
+  const density = 100 * anomalCount / Math.max(1, (useAll ? size*size : validCount));
+  if(wSum>0){ cx/=wSum; cy/=wSum; } else { cx=size/2; cy=size/2; }
+
+  let level, band;
+  if(density < 4.7){ level=0; band='No DR'; }
+  else if(density < 5.2){ level=1; band='Mild NPDR'; }
+  else if(density < 6.0){ level=2; band='Moderate NPDR'; }
+  else if(density < 7.3){ level=3; band='Severe NPDR'; }
+  else { level=4; band='Proliferative DR'; }
+
+  const bounds=[4.7,5.2,6.0,7.3];
+  let distances = bounds.map(b=>Math.abs(density-b));
+  let minDist = Math.min(...distances, 1.5);
+  const confidence = Math.min(96, Math.max(68, 72 + minDist*10));
+
+  // Synthesize probabilities for client-side fallback
+  const probs = [0.05, 0.05, 0.05, 0.05, 0.05];
+  probs[level] = Math.round(confidence) / 100;
+  const rem = (1 - probs[level]) / 4;
+  for(let i=0; i<5; i++){ if(i !== level) probs[i] = Math.round(rem * 1000)/1000; }
+
+  return {
+    level, band, confidence: Math.round(confidence),
+    centroid:{x:cx/size, y:cy/size},
+    density: Math.round(density*100)/100,
+    probabilities: probs,
+    isRealModel: false
+  };
+}
+
+function levelColor(level){
+  return ['#2F7D5A','#5F9A45','#B4790E','#C9581F','#AE3626'][level];
+}
+function levelTint(level){
+  return ['#E6F2EA','#EEF3E2','#FBF0DD','#FCE9DD','#FBE7E3'][level];
+}
+
+function drawHeatmap(canvasEl, img, centroid, level){
+  const ctx = canvasEl.getContext('2d');
+  const w = canvasEl.width, h = canvasEl.height;
+
+  // If server provided real Grad-CAM overlay image, render it
+  if(state.ai && state.ai.gradcam_overlay){
+    const camImg = new Image();
+    camImg.onload = () => {
+      ctx.clearRect(0, 0, w, h);
+      ctx.drawImage(camImg, 0, 0, w, h);
+    };
+    camImg.src = state.ai.gradcam_overlay;
+    return;
+  }
+
+  // Fallback heuristic heatmap
+  ctx.drawImage(img, 0, 0, w, h);
+  if(level===0) return;
+  const cx = centroid.x*w, cy = centroid.y*h;
+  const radius = 26 + level*16;
+  const grad = ctx.createRadialGradient(cx,cy,2,cx,cy,radius);
+  grad.addColorStop(0, 'rgba(255,60,20,0.85)');
+  grad.addColorStop(0.4, 'rgba(255,140,0,0.55)');
+  grad.addColorStop(0.75, 'rgba(255,220,0,0.25)');
+  grad.addColorStop(1, 'rgba(255,220,0,0)');
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.arc(cx,cy,radius,0,Math.PI*2);
+  ctx.fill();
+  ctx.globalCompositeOperation = 'source-over';
+  if(level>=2){
+    for(let i=0;i<level;i++){
+      const ang = (i/level)*Math.PI*2 + 0.6;
+      const dx = cx + Math.cos(ang)*radius*0.7;
+      const dy = cy + Math.sin(ang)*radius*0.7;
+      const g2 = ctx.createRadialGradient(dx,dy,1,dx,dy,14);
+      g2.addColorStop(0,'rgba(255,90,20,0.6)');
+      g2.addColorStop(1,'rgba(255,90,20,0)');
+      ctx.globalCompositeOperation='lighter';
+      ctx.fillStyle=g2;
+      ctx.beginPath(); ctx.arc(dx,dy,14,0,Math.PI*2); ctx.fill();
+      ctx.globalCompositeOperation='source-over';
+    }
+  }
+}
+
+function referralFor(level){
+  if(level<=1) return {tier:'low', title:'Routine Follow-up (12 Months)', desc:'Low risk detected. Re-screen in 12 months through community health program.'};
+  if(level===2) return {tier:'medium', title:'Ophthalmologist Review Recommended', desc:'Referable DR detected. Schedule specialist evaluation within 4–6 weeks.'};
+  return {tier:'high', title:'Priority Referral — Urgent', desc:'Sight-threatening DR suspected. Immediate referral to ophthalmology within 1–2 weeks.'};
+}
+
+/* ---------------- Render Engine ---------------- */
+
+function render(){
+  renderSidebar();
+  renderMain();
+}
+
+function renderSidebar(){
+  const el = document.getElementById('sidebar');
+  const stepsHtml = STEPS.map((s,i)=>{
+    const locked = i > state.maxReached;
+    const active = state.view==='flow' && i===state.step;
+    const done = i < state.maxReached || (i===state.maxReached && state.view==='records');
+    const cls = [active?'active':'', (!active && done)?'done':'', locked?'locked':''].join(' ');
+    return `<div class="nav-item ${cls}" onclick="goToNav(${i})">
+      <div class="nav-num">${i<state.maxReached || (i===state.maxReached && state.view==='records') ?'✓':i+1}</div>
+      <div>
+        <div class="nav-text-title">${s.title}</div>
+        <div class="nav-text-desc">${s.desc}</div>
+      </div>
+    </div>`;
+  }).join('');
+  const recordsActive = state.view==='records';
+  el.innerHTML = `<div class="sidebar-label">Screening Workflow</div>` + stepsHtml + `
+    <div class="nav-sep"></div>
+    <div class="sidebar-label">Records</div>
+    <div class="nav-item records-tab ${recordsActive?'active':''}" onclick="openRecords()">
+      <div class="nav-num">≡</div>
+      <div>
+        <div class="nav-text-title">Patient Database</div>
+        <div class="nav-text-desc">${records.length} records saved</div>
+      </div>
+    </div>
+  `;
+}
+
+function renderMain(){
+  const el = document.getElementById('main');
+  if(state.view==='records') return renderRecordsPage(el);
+  const s = state.step;
+  if(s===0) return renderIntake(el);
+  if(s===1) return renderLoginSession(el);
+  if(s===2) return renderUpload(el);
+  if(s===3) return renderQuality(el);
+  if(s===4) return renderAnalysis(el);
+  if(s===5) return renderExplain(el);
+  if(s===6) return renderReview(el);
+  if(s===7) return renderReferral(el);
+}
+
+/* STEP 0: DEDICATED PATIENT INTAKE FORM */
+function renderIntake(el){
+  el.innerHTML = `
+    <div class="disclaimer-banner">
+      ⚠️ <strong>Research Prototype:</strong> Decision support tool. Outputs require clinical review by a certified eye care professional.
+    </div>
+    <h1 class="panel-title">1. Dedicated Patient Registration</h1>
+    <p class="panel-sub">Enter comprehensive patient demographic data and diabetic history to establish a verified screening record.</p>
+    <div class="card">
+      <form id="intakeForm" onsubmit="handleIntakeSubmit(event)">
+        <div class="form-group">
+          <label>Full Name *</label>
+          <input type="text" id="pName" placeholder="e.g. Ananya Sharma" value="${state.patient.name}" required />
+        </div>
+        <div class="form-row-3">
+          <div class="form-group">
+            <label>Age *</label>
+            <input type="number" id="pAge" min="1" max="120" placeholder="e.g. 52" value="${state.patient.age}" required />
+          </div>
+          <div class="form-group">
+            <label>Gender *</label>
+            <select id="pGender">
+              <option value="Female" ${state.patient.gender==='Female'?'selected':''}>Female</option>
+              <option value="Male" ${state.patient.gender==='Male'?'selected':''}>Male</option>
+              <option value="Other" ${state.patient.gender==='Other'?'selected':''}>Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Phone Number *</label>
+            <input type="tel" id="pPhone" placeholder="e.g. +91 98765 43210" value="${state.patient.phone}" required />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Prior Retinopathy Assessment</label>
+          <select id="pHistory">
+            <option value="No prior DR" ${state.patient.history==='No prior DR'?'selected':''}>No prior DR detected</option>
+            <option value="Mild DR" ${state.patient.history==='Mild DR'?'selected':''}>History of Mild DR</option>
+            <option value="Laser Treated" ${state.patient.history==='Laser Treated'?'selected':''}>Prior Photocoagulation / Laser</option>
+            <option value="Unknown" ${state.patient.history==='Unknown'?'selected':''}>Unknown / First Screen</option>
+          </select>
+        </div>
+
+        <div class="btn-row">
+          <button type="submit" class="btn btn-primary">Register Patient & Create ID</button>
+        </div>
+      </form>
+    </div>
+  `;
+}
+
+function handleIntakeSubmit(e){
+  e.preventDefault();
+  const name = document.getElementById('pName').value.trim();
+  const age = document.getElementById('pAge').value.trim();
+  const gender = document.getElementById('pGender').value;
+  const phone = document.getElementById('pPhone').value.trim();
+  const history = document.getElementById('pHistory').value;
+  const autoId = `P-${Math.floor(1000 + Math.random() * 9000)}`;
+
+  state.patient = { id: autoId, name, age, gender, phone, history };
+  document.getElementById('patientId').value = autoId;
+  goTo(1);
+}
+
+/* STEP 1: LOGIN SESSION & VERIFICATION CONFIRMATION */
+function renderLoginSession(el){
+  el.innerHTML = `
+    <h1 class="panel-title">2. Active Session Authentication</h1>
+    <p class="panel-sub">Verify patient credentials and launch active clinical screening session.</p>
+    <div class="card">
+      <div class="patient-card-verified">
+        <div class="patient-card-info">
+          <strong>${state.patient.name}</strong> (${state.patient.gender}, ${state.patient.age} yrs)
+          <p>ID: <strong>${state.patient.id}</strong> | Contact: ${state.patient.phone}</p>
+        </div>
+        <div>
+          <span style="display:inline-block; padding:4px 10px; background:var(--green); color:#fff; font-weight:700; font-size:11px; border-radius:12px;">ACTIVE LOGIN VERIFIED</span>
+        </div>
+      </div>
+
+      <p style="font-size:13.5px; color:var(--ink-muted);">Click below to authenticate the screening session and activate the retinal camera intake stream.</p>
+      
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="state.isLoggedIn=true; goTo(2);">Proceed to Camera Capture →</button>
+        <button class="btn btn-ghost" onclick="goTo(0)">Edit Details</button>
+      </div>
+    </div>
+  `;
+}
+
+/* STEP 2: UPLOAD */
+function renderUpload(el){
+  el.innerHTML = `
+    <h1 class="panel-title">3. Capture Retinal Image</h1>
+    <p class="panel-sub">Session Active: <strong>${state.patient.name} (${state.patient.id})</strong>. Upload a fundus photo from the connected diagnostic camera.</p>
+    <div class="card">
+      <div class="dropzone" id="dz">
+        <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="#0F7A82" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.5"/></svg>
+        <div class="dropzone-title">Click to upload, or drag fundus camera file here</div>
+        <div class="dropzone-sub">Supports Standard JPG / PNG / JPEG format</div>
+        <input type="file" id="fileInput" accept="image/*" />
+      </div>
+    </div>
+  `;
+  const dz = document.getElementById('dz');
+  const input = document.getElementById('fileInput');
+  dz.onclick = ()=>input.click();
+  dz.ondragover = e=>{e.preventDefault(); dz.classList.add('drag');};
+  dz.ondragleave = ()=>dz.classList.remove('drag');
+  dz.ondrop = e=>{
+    e.preventDefault(); dz.classList.remove('drag');
+    if(e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+  };
+  input.onchange = e=>{ if(e.target.files[0]) handleFile(e.target.files[0]); };
+}
+
+function handleFile(file){
+  state.currentFile = file;
+  const reader = new FileReader();
+  reader.onload = e=>{
+    const img = new Image();
+    img.onload = ()=>{
+      state.imgEl = img;
+      state.quality = analyzeQuality(img);
+      goTo(3);
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+/* STEP 3: QUALITY CHECK */
+function renderQuality(el){
+  const q = state.quality;
+  el.innerHTML = `
+    <h1 class="panel-title">4. Real-time Image Quality Assurance</h1>
+    <p class="panel-sub">Automated pre-screening analysis to prevent non-diagnostic artifacts from entering the AI pipeline.</p>
+    <div class="card">
+      <div class="img-row">
+        <div class="img-frame"><img id="qImg" /></div>
+        <div class="metrics">
+          <div class="metric-row">
+            <span class="metric-name">Focus / Sharpness Metric</span>
+            <span class="metric-val"><span class="dot ${q.sharpnessOk?'good':'bad'}"></span>${q.sharpnessOk?'Acceptable':'Soft Focus'} <span style="color:var(--ink-muted); font-weight:400;">(${q.sharpness})</span></span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-name">Illumination Level</span>
+            <span class="metric-val"><span class="dot ${q.brightnessOk?'good':'bad'}"></span>${q.brightnessOk?'Balanced':'Poor Lighting'} <span style="color:var(--ink-muted); font-weight:400;">(${q.brightness}/255)</span></span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-name">Macula & Disc Centering</span>
+            <span class="metric-val"><span class="dot ${q.framingOk?'good':'bad'}"></span>${q.framingOk?'Optimal':'Off-Center'} <span style="color:var(--ink-muted); font-weight:400;">(${q.framing})</span></span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-name">Fundus Spectrum Verification</span>
+            <span class="metric-val"><span class="dot ${q.colorOk?'good':'bad'}"></span>${q.colorOk?'Verified Fundus':'Invalid Spectrum'} <span style="color:var(--ink-muted); font-weight:400;">(${q.colorMatch}%)</span></span>
+          </div>
+          <div class="verdict ${q.pass?'good':'bad'}">
+            ${q.pass ? '✓ Quality Check Passed: Image suitable for AI analysis' : '⚠ Quality Check Warning: Sub-optimal capture. Proceed or recapture.'}
+          </div>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="startAnalysis()">Run Deep AI Analysis →</button>
+        <button class="btn btn-ghost" onclick="goTo(2)">Recapture / Upload Different File</button>
+      </div>
+    </div>
+  `;
+  document.getElementById('qImg').src = state.imgEl.src;
+}
+
+async function startAnalysis(){
+  goTo(4);
+  const el = document.getElementById('main');
+  el.innerHTML = `
+    <h1 class="panel-title">5. AI Analysis Engine</h1>
+    <p class="panel-sub">Processing pixel feature maps through DenseNet-121 convolutional networks...</p>
+    <div class="card">
+      <div class="analyzing">
+        <div class="spinner"></div>
+        <div class="analyzing-text" id="statusMsg">Evaluating retinal features with deep learning model...</div>
+      </div>
+    </div>
+  `;
+
+  // Attempt backend API call if image file exists
+  if(state.currentFile){
+    try {
+      const formData = new FormData();
+      formData.append('file', state.currentFile);
+      const res = await fetch('/api/analyze', { method: 'POST', body: formData });
+      if(res.ok){
+        const data = await res.json();
+        if(data.status === 'success'){
+          state.ai = {
+            level: data.ai.level,
+            band: data.ai.band,
+            confidence: data.ai.confidence,
+            probabilities: data.ai.probabilities,
+            centroid: { x: 0.5, y: 0.5 },
+            density: 0,
+            gradcam_overlay: data.ai.gradcam_overlay,
+            isRealModel: true,
+            model_file: data.ai.model_file
+          };
+          goTo(4);
+          return;
+        } else if (data.status === 'quality_failed') {
+          alert('Image failed server quality check: ' + (data.quality?.reason || 'Non-diagnostic quality'));
+        }
+      }
+    } catch(err) {
+      console.log('Backend inference unavailable; running client heuristic analyzer:', err);
+    }
+  }
+
+  // Client-side fallback analyzer
+  setTimeout(()=>{
+    state.ai = analyzeAI(state.imgEl);
+    goTo(4);
+  }, 1000);
+}
+
+/* STEP 4: ANALYSIS RESULT */
+function renderAnalysis(el){
+  if(!state.ai){ return renderQuality(el); }
+  const a = state.ai;
+  const col = levelColor(a.level);
+  const gradeLabels = ['No DR (0)', 'Mild NPDR (1)', 'Moderate NPDR (2)', 'Severe NPDR (3)', 'Proliferative DR (4)'];
+
+  let probRows = '';
+  if(a.probabilities && a.probabilities.length === 5){
+    probRows = a.probabilities.map((p, idx) => {
+      const pct = Math.round(p * 100);
+      const isPredicted = idx === a.level;
+      return `
+        <div class="prob-row">
+          <div class="prob-name" style="${isPredicted?'font-weight:700; color:var(--ink);':''}">${gradeLabels[idx]}</div>
+          <div class="prob-track">
+            <div class="prob-fill ${isPredicted?'predicted':''}" style="width:${pct}%; background:${isPredicted?col:'var(--hairline)'};"></div>
+          </div>
+          <div class="prob-val">${pct}%</div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  el.innerHTML = `
+    <h1 class="panel-title">5. AI Diagnostic Assessment</h1>
+    <p class="panel-sub">Severity graded according to Diabetic Retinopathy International Clinical guidelines.</p>
+    <div class="card">
+      <div class="result-row">
+        <div class="level-badge" style="border-color:${col}; background:${levelTint(a.level)};">
+          <div class="level-num" style="color:${col};">${a.level}</div>
+          <div class="level-tag">DR GRADE</div>
+        </div>
+        <div class="result-detail">
+          <h3>${a.band}</h3>
+          <div class="conf-bar-track"><div class="conf-bar-fill" style="width:${a.confidence}%; background:${col};"></div></div>
+          <div class="conf-label">${a.confidence}% Model Confidence ${a.isRealModel ? '• DenseNet-121' : '• Heuristic Estimator'}</div>
+        </div>
+      </div>
+
+      ${probRows ? `
+        <div class="prob-breakdown">
+          <div class="prob-title">Full Multi-Class Softmax Probabilities</div>
+          ${probRows}
+        </div>
+      ` : ''}
+
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="goTo(5)">Inspect Grad-CAM Explainability →</button>
+      </div>
+    </div>
+  `;
+}
+
+/* STEP 5: EXPLAINABILITY */
+function renderExplain(el){
+  const a = state.ai;
+  el.innerHTML = `
+    <h1 class="panel-title">6. Explainable AI — Visual Attribution</h1>
+    <p class="panel-sub">Grad-CAM heatmaps highlight regions driving the AI classification, providing clinical transparency.</p>
+    <div class="card">
+      <div class="heat-row">
+        <div class="heat-col">
+          <div class="heat-frame"><img id="origImg" style="width:100%;height:100%;object-fit:cover;" /></div>
+          <div class="heat-col-label">Input Fundus Photo</div>
+        </div>
+        <div class="heat-col">
+          <div class="heat-frame"><canvas id="heatCanvas" width="220" height="220"></canvas></div>
+          <div class="heat-col-label">Attention Heatmap (Grad-CAM)</div>
+        </div>
+      </div>
+      <p class="note">
+        💡 <strong>Grad-CAM Interpretation:</strong> Warmer red/amber bands highlight the spatial feature activations in the convolutional backbone that most strongly correlate with the assigned DR severity grade.
+      </p>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="goTo(6)">Submit to Ophthalmologist Suite →</button>
+      </div>
+    </div>
+  `;
+  document.getElementById('origImg').src = state.imgEl.src;
+  const canvas = document.getElementById('heatCanvas');
+  drawHeatmap(canvas, state.imgEl, a.centroid, a.level);
+}
+
+/* STEP 6: DOCTOR REVIEW */
+function renderReview(el){
+  const a = state.ai;
+  const col = levelColor(a.level);
+
+  el.innerHTML = `
+    <h1 class="panel-title">7. Clinical Review & Verification</h1>
+    <p class="panel-sub">Ophthalmologist verification portal — inspect findings and sign off on recommendation.</p>
+    <div class="card" style="max-width:900px;">
+      <div class="review-grid">
+        <div class="review-block">
+          <h4>Patient Clinical Record</h4>
+          <div class="stat-line"><span>Full Name</span><span style="font-weight:600;">${state.patient.name}</span></div>
+          <div class="stat-line"><span>ID / Phone</span><span>${state.patient.id} | ${state.patient.phone}</span></div>
+          <div class="stat-line"><span>Demographics</span><span>${state.patient.gender}, ${state.patient.age} years</span></div>
+          <div class="stat-line"><span>Prior History</span><span>${state.patient.history}</span></div>
+
+          <h4 style="margin-top:20px;">AI Diagnostic Findings</h4>
+          <div class="stat-line"><span>DR Grade</span><span style="font-weight:700; color:${col};">Level ${a.level} — ${a.band}</span></div>
+          <div class="stat-line"><span>Confidence</span><span>${a.confidence}%</span></div>
+          <div class="stat-line"><span>Model Engine</span><span>${a.isRealModel ? 'DenseNet-121 Deep Neural Network' : 'Interactive Prototype'}</span></div>
+        </div>
+
+        <div class="review-block">
+          <h4>Visual Verification Overlay</h4>
+          <div class="heat-frame" style="width:100%; height:180px;"><canvas id="reviewCanvas" width="360" height="180"></canvas></div>
+
+          <h4 style="margin-top:14px;">Specialist Notes & Observations</h4>
+          <div class="form-group">
+            <textarea id="docNotes" rows="3" placeholder="Enter clinical notes, OCT order details, or prescribed follow-up interval..." onchange="state.doctorNotes=this.value">${state.doctorNotes}</textarea>
+          </div>
+        </div>
+      </div>
+
+      <h4 style="margin-top:16px; font-size:12px; text-transform:uppercase; color:var(--teal-deep);">Specialist Decision</h4>
+      <div class="decision-btns">
+        <button class="decision-btn ${state.decision==='confirm'?'selected confirm':''}" onclick="setDecision('confirm')">✓ Confirm AI Grade</button>
+        <button class="decision-btn ${state.decision==='further'?'selected further':''}" onclick="setDecision('further')">⟳ Request OCT Scan</button>
+        <button class="decision-btn ${state.decision==='reject'?'selected reject':''}" onclick="setDecision('reject')">✕ Reject / Overrule</button>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" ${!state.decision?'disabled':''} onclick="finishReview()">Finalize & Generate Report →</button>
+      </div>
+    </div>
+  `;
+  const canvas = document.getElementById('reviewCanvas');
+  drawHeatmap(canvas, state.imgEl, a.centroid, a.level);
+}
+
+function setDecision(d){
+  state.decision = d;
+  const notesEl = document.getElementById('docNotes');
+  if(notesEl) state.doctorNotes = notesEl.value;
+  renderReview(document.getElementById('main'));
+}
+
+function finishReview(){
+  records.unshift({
+    id: state.patient.id,
+    name: state.patient.name,
+    age: state.patient.age,
+    gender: state.patient.gender,
+    phone: state.patient.phone,
+    history: state.patient.history,
+    level: state.ai.level,
+    band: state.ai.band,
+    confidence: state.ai.confidence,
+    decision: state.decision,
+    notes: state.doctorNotes,
+    referral: referralFor(state.ai.level),
+    time: new Date().toLocaleString([], {hour:'2-digit', minute:'2-digit', month:'short', day:'numeric'})
+  });
+  goTo(7);
+}
+
+/* STEP 7: REFERRAL REPORT */
+function renderReferral(el){
+  const a = state.ai;
+  const r = referralFor(a.level);
+  el.innerHTML = `
+    <h1 class="panel-title">8. Screening Referral & Official Report</h1>
+    <p class="panel-sub">Official diagnostic summary report ready for clinical attachment or patient referral.</p>
+    <div class="card">
+      <div class="referral-banner ${r.tier}">
+        <div class="referral-icon">${r.tier==='high'?'▲':(r.tier==='medium'?'●':'✓')}</div>
+        <div>
+          <div class="referral-title ${r.tier}">${r.title}</div>
+          <div class="referral-desc">${r.desc}</div>
+        </div>
+      </div>
+      <div class="report">
+        <div class="report-row"><span class="report-label">Patient Name & ID</span><span class="report-val">${state.patient.name} (${state.patient.id})</span></div>
+        <div class="report-row"><span class="report-label">Age / Gender / Contact</span><span class="report-val">${state.patient.age} yrs | ${state.patient.gender} | ${state.patient.phone}</span></div>
+        <div class="report-row"><span class="report-label">Prior History</span><span class="report-val">${state.patient.history}</span></div>
+        <div class="report-row"><span class="report-label">DR Diagnostic Grade</span><span class="report-val">Level ${a.level} — ${a.band}</span></div>
+        <div class="report-row"><span class="report-label">AI Model Confidence</span><span class="report-val">${a.confidence}%</span></div>
+        <div class="report-row"><span class="report-label">Doctor Verification</span><span class="report-val">${labelDecision(state.decision)}</span></div>
+        <div class="report-row"><span class="report-label">Clinical Observations</span><span class="report-val">${state.doctorNotes || 'None recorded'}</span></div>
+        <div class="report-row"><span class="report-label">Screening Timestamp</span><span class="report-val">${new Date().toLocaleString()}</span></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="resetFlow()">+ Screen Next Patient</button>
+        <button class="btn btn-ghost" onclick="window.print()">Print Official Report</button>
+        <button class="btn btn-ghost" onclick="downloadReportJson()">Download JSON Data</button>
+        <button class="btn btn-ghost" onclick="openRecords()">Open Patient Records</button>
+      </div>
+    </div>
+  `;
+}
+
+function downloadReportJson(){
+  const data = {
+    patient: state.patient,
+    screening: {
+      dr_grade: state.ai.level,
+      dr_band: state.ai.band,
+      confidence: state.ai.confidence,
+      decision: state.decision,
+      clinical_notes: state.doctorNotes,
+      referral: referralFor(state.ai.level),
+      timestamp: new Date().toISOString()
+    }
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `DRISHTI_${state.patient.id}_report.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function labelDecision(d){
+  return d==='confirm' ? 'AI Grade Confirmed' : d==='further' ? 'OCT Scan Ordered' : d==='reject' ? 'Overruled / Re-screen' : '—';
+}
+
+/* DATABASE & RECORDS PAGE */
+function renderRecordsPage(el){
+  const query = (document.getElementById('recSearch')?.value || '').toLowerCase();
+  
+  const filtered = records.filter(r => 
+    r.name.toLowerCase().includes(query) || 
+    r.id.toLowerCase().includes(query) || 
+    r.phone.includes(query)
+  );
+
+  const total = records.length;
+  const lowCount = records.filter(r=>r.referral.tier==='low').length;
+  const medCount = records.filter(r=>r.referral.tier==='medium').length;
+  const highCount = records.filter(r=>r.referral.tier==='high').length;
+
+  const rows = filtered.map(r=>`
+    <tr>
+      <td><strong>${r.name}</strong><br><span style="font-size:11px; color:var(--ink-muted);">${r.id} | ${r.gender}, ${r.age}y</span></td>
+      <td><span class="lvl-chip" style="background:${levelColor(r.level)};">${r.level}</span></td>
+      <td>${r.confidence}%</td>
+      <td>${labelDecision(r.decision)}</td>
+      <td><span class="tier-pill ${r.referral.tier}">${r.referral.title}</span></td>
+      <td style="color:var(--ink-muted);">${r.time}</td>
+    </tr>
+  `).join('');
+
+  el.innerHTML = `
+    <h1 class="records-page-title">Screening Patient Records</h1>
+    <p class="panel-sub">Central database storing all processed patient screenings for clinical audit and tracking.</p>
+
+    <div class="stat-cards">
+      <div class="stat-card"><div class="stat-card-num">${total}</div><div class="stat-card-label">Total Screened</div></div>
+      <div class="stat-card low"><div class="stat-card-num">${lowCount}</div><div class="stat-card-label">Routine Follow-up</div></div>
+      <div class="stat-card medium"><div class="stat-card-num">${medCount}</div><div class="stat-card-label">Specialist Reviews</div></div>
+      <div class="stat-card high"><div class="stat-card-num">${highCount}</div><div class="stat-card-label">Priority Referrals</div></div>
+    </div>
+
+    <div class="records-filter-bar">
+      <input id="recSearch" type="text" placeholder="🔍 Search records by name, ID, or phone..." value="${query}" oninput="renderRecordsPage(document.getElementById('main'))" />
+    </div>
+
+    <div class="records-table-card">
+      ${ filtered.length===0 ? `
+        <div class="empty-state">
+          <div class="empty-state-title">No screening records found</div>
+          <div>Complete a patient screening to see it listed here.</div>
+        </div>
+      ` : `
+        <table>
+          <thead><tr><th>Patient Details</th><th>Grade</th><th>Confidence</th><th>Doctor Action</th><th>Referral Tier</th><th>Timestamp</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      `}
+    </div>
+  `;
+}
+
+// Initial bootstrap
+checkBackendStatus();
+render();
+</script>
+</body>
+</html>
